@@ -8,7 +8,12 @@ import torch.nn.functional as F
 from torch_geometric.datasets import Planetoid
 
 from models import return_net
-from utils import accuracy
+
+
+def accuracy(output, labels):
+    preds = output.max(1)[1].type_as(labels)
+    correct = preds.eq(labels).double()
+    return correct.sum() / len(labels)
 
 
 def train(data, model, optimizer):
