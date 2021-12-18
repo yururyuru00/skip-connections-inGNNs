@@ -10,7 +10,7 @@ tqdm
 ```
 
 ## Models 
-| Skip | Vanilla | Res      | Dense      | Highway      | Complex Summarize | Simple Summarize |
+| Skip | Vanilla | Res      | Dense      | Highway      | Complex Summarize | Simple Summarize[ours] |
 |------|---------|----------|----------  |--------------|-------------------|------------------|
 | GCN  | GCN     | Res-GCN  | Dense-GCN  | Highway-GCN  | CS-GCN            | SS-GCN           |
 | GAT  | GAT     | Res-GAT  | Dense-GAT  | Highway-GAT  | CS-GAT            | SS-GAT           |
