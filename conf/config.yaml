@@ -1,0 +1,349 @@
+key: SAGE_Reddit_tuned
+
+
+# -------datasets (planetoid)-------
+
+Planetoid: &Planetoid
+  task: transductive
+  pre_transform: None
+  split: full # [public(semi-supervised), full(supervised)]
+  n_tri: 10
+
+Cora: &Cora
+  <<: *Planetoid
+  dataset: Cora
+  transform: None
+  n_feat: 1433
+  n_class: 7
+
+CiteSeer: &CiteSeer
+  <<: *Planetoid
+  dataset: CiteSeer
+  transform: T.NormalizeFeatures()
+  n_feat: 3703
+  n_class: 6
+
+PubMed: &PubMed
+  <<: *Planetoid
+  dataset: PubMed
+  transform: None
+  n_feat: 500
+  n_class: 3
+
+
+# -------datasets (open graph benchmark: OGB)-------
+
+OGB: &OGB
+  task: transductive
+  n_tri: 3
+
+PPI: &PPI
+  <<: *OGB
+  dataset: PPI
+  n_feat: 1 # num. of node feat
+  e_feat: 8 # num. of edge feat
+  n_class: 112
+  epochs: 1000
+
+Arxiv: &Arxiv
+  <<: *OGB
+  dataset: Arxiv
+  n_feat: 128
+  n_class: 40
+  epochs: 500
+
+
+# -------datasets (others)-------
+
+Reddit: &Reddit
+  dataset: Reddit
+  task: transductive
+  n_feat: 602
+  n_class: 41
+  n_tri: 3
+  epochs: 11 # override >> GNN
+  partial_aggr: False # this setting applied to only test. we use part_aggr always when train.
+
+PPIinduct: &PPIinduct
+  dataset: PPIinduct
+  task: inductive
+  n_feat: 50
+  n_class: 121
+  n_tri: 3
+
+
+# -------model interface-------
+
+GNN: &GNN
+  base_gnn: GNN
+  skip_connection: vanilla # [vanilla, res, dense, highway, summarize]
+  seed: 42
+  epochs: 200
+  patience: 100
+  norm: None # [None, LayerNorm, BatchNorm1d]
+
+
+# -------model instance (existing study + existing parameters)-------
+
+# Graph Convolution Networks (GCN)
+GCN: &GCN
+  <<: *GNN
+  base_gnn: GCN # override >> GNN
+  n_layer: 2
+  dropout: 0.5
+  learning_rate: 0.01
+  weight_decay: 0.0005
+
+GCN_Cora_exist: &GCN_Cora_exist
+  <<: [*Cora, *GCN]
+  n_hid: 16
+
+GCN_CiteSeer_exist: &GCN_CiteSeer_exist
+  <<: [*CiteSeer, *GCN]
+  n_hid: 16
+
+GCN_PubMed_exist: &GCN_PubMed_exist
+  <<: [*PubMed, *GCN]
+  n_hid: 16
+
+GCN_PPIinduct_exist: &GCN_PPIinduct_exist
+  <<: [*PPIinduct, *GCN]
+  n_hid: 256
+  dropout: 0. # override >> GCN
+  weight_decay: 0. # override >> GCN
+
+GCN_PPI_exist: &GCN_PPI_exist
+  <<: [*PPI, *GCN]
+  n_hid: 256
+  n_layer: 3 # override >> GCN
+  dropout: 0. # override >> GCN
+  weight_decay: 0. # override >> GCN
+
+GCN_Arxiv_exist: &GCN_Arxiv_exist
+  <<: [*Arxiv, *GCN]
+  n_hid: 256
+  n_layer: 3 # override >> GCN
+  weight_decay: 0. # override >> GCN
+  norm: BatchNorm1d # override >> GNN
+
+
+# Graph Attention Networks (GAT)
+GAT: &GAT
+  <<: *GNN
+  base_gnn: GAT # override >> GNN
+  n_layer: 2
+  dropout: 0.6
+  learning_rate: 0.005
+  weight_decay: 0.0005
+  dropout_att: 0.6
+  n_head: 8
+  n_head_last: 1
+
+GAT_Cora_exist: &GAT_Cora_exist
+  <<: [*Cora, *GAT]
+  transform: T.NormalizeFeatures() # override >> Cora
+  n_hid: 8
+
+GAT_CiteSeer_exist: &GAT_CiteSeer_exist
+  <<: [*CiteSeer, *GAT]
+  n_hid: 8
+
+GAT_PubMed_exist: &GAT_PubMed_exist
+  <<: [*PubMed, *GAT]
+  n_hid: 8
+  weight_decay: 0.001 # override >> GAT
+  n_head_last: 8 # override >> GAT
+
+GAT_PPIinduct_exist: &GAT_PPIinduct_exist
+  <<: [*PPIinduct, *GAT]
+  n_hid: 256
+  n_layer: 3 # override >> GAT
+  dropout: 0. # override >> GAT
+  weight_decay: 0. # override >> GAT
+  dropout_att: 0. # override >> GAT
+  n_head: 4 # override >> GAT
+  n_head_last: 6 # override >> GAT
+  skip_connection: res # override >> GNN
+
+# cannot exe 'GAT_Reddit' because of out of memory
+
+# cannot exe 'GAT_PPI' because of out of memory
+
+# cannot exe 'GAT_Arxiv' because of out of memory
+
+
+# Graph SAGE (SAGE)
+SAGE: &SAGE
+  <<: *GNN
+  base_gnn: SAGE # override >> GNN
+  n_layer: 3
+  dropout: 0.
+  learning_rate: 0.01
+  weight_decay: 0.
+
+SAGE_PPIinduct_exist: &SAGE_PPIinduct_exist
+  <<: [*PPIinduct, *SAGE]
+  n_hid: 256
+  learning_rate: 0.005 # override >> SAGE
+
+SAGE_Reddit_exist: &SAGE_Reddit_exist
+  <<: [*Reddit, *SAGE]
+  n_hid: 128
+  n_layer: 2 # override >> SAGE
+
+SAGE_PPI_exist: &SAGE_PPI_exist
+  <<: [*PPI, *SAGE]
+  n_hid: 256
+
+SAGE_Arxiv_exist: &SAGE_Arxiv_exist
+  <<: [*Arxiv, *SAGE]
+  n_hid: 256
+  dropout: 0.5 # override >> SAGE
+  norm: BatchNorm1d # override >> GNN
+
+
+# -------model instance (existing study + tuned parameters)-------
+
+GCN_Cora_tuned: &GCN_Cora_tuned
+  <<: [*GCN_Cora_exist]
+  n_hid: 32 # 16 >> 32
+  dropout: 0. # 0.5 >> 0.
+  learning_rate: 0.001 # 0.01 >> 0.001
+  weight_decay: 0.001 # 0.0005 >> 0.001
+
+GCN_CiteSeer_tuned: &GCN_CiteSeer_tuned
+  <<: [*GCN_CiteSeer_exist]
+  n_hid: 32 # 16 >> 32
+  dropout: 0.6 # 0.5 >> 0.6
+  learning_rate: 0.005 # 0.01 >> 0.005
+  weight_decay: 0.0001 # 0.0005 >> 0.0001
+
+GCN_PubMed_tuned: &GCN_PubMed_tuned
+  <<: [*GCN_PubMed_exist]
+  n_hid: 32 # 16 >> 32
+  dropout: 0.6 # 0.5 >> 0.6
+  weight_decay: 0.001 # 0.0005 >> 0.001
+  norm: LayerNorm # None >> LayerNorm
+
+GCN_PPI_tuned: &GCN_PPI_tuned
+  <<: [*GCN_PPI_exist]
+  n_hid: 128 # override 256 >> 128
+  dropout: 0.6 # override 0. >> 0.6
+  learning_rate: 0.001 # override 0.01 >> 0.001
+  n_layer: 2 # override 3 >> 2
+
+GCN_Arxiv_tuned: &GCN_Arxiv_tuned
+  <<: [*GCN_Arxiv_exist]
+  learning_rate: 0.001 # override 0.01 >> 0.001
+  n_layer: 5 # override 3 >> 5
+  
+
+GAT_Cora_tuned: &GAT_Cora_tuned
+  <<: [*GAT_Cora_exist]
+  dropout: 0. # override 0.6 >> 0.
+  learning_rate: 0.01 # override 0.005 >> 0.01
+  weight_decay: 0.0001 # override 0.0005 >> 0.0001
+
+GAT_CiteSeer_tuned: &GAT_CiteSeer_tuned
+  <<: [*GAT_CiteSeer_exist]
+  n_hid: 16 # override 8 >> 16
+  dropout: 0. # override 0.6 >> 0.
+  learning_rate: 0.01 # override 0.005 >> 0.01
+
+GAT_PubMed_tuned: &GAT_PubMed_tuned
+  <<: [*GAT_PubMed_exist]
+  n_hid: 16 # override 8 >> 16
+  dropout: 0. # override 0.6 >> 0.
+  learning_rate: 0.01 # override 0.005 >> 0.01
+  weight_decay: 0. # override 0.001 >> 0.
+  norm: BatchNorm1d # override None >> BatchNorm1d
+
+GAT_PPIinduct_tuned: &GAT_PPIinduct_tuned
+  <<: [*GAT_PPIinduct_exist]
+  n_hid: 128 # override 256 >> 128
+  learning_rate: 0.001 # override 0.005 >> 0.001
+
+
+SAGE_Reddit_tuned: &SAGE_Reddit_tuned
+  <<: [*SAGE_Reddit_exist]
+  n_hid: 256 # override 128 >> 256
+  dropout: 0.6 # override 0. >> 0.6
+  learning_rate: 0.001 # override 0.01 >> 0.001
+  weight_decay: 0.0001 # override 0. >> 0.0001
+  norm: BatchNorm1d # override None >> BatchNorm1d
+  n_layer: 3 # override 2 >> 3
+  epochs: 21 # override 11 > 21
+
+SAGE_PPI_tuned: &SAGE_PPI_tuned
+  <<: [*SAGE_PPI_exist]
+  dropout: 0.6 # override 0. >> 0.6
+  learning_rate: 0.005 # override 0.01 >> 0.005
+  norm: BatchNorm1d # override None >> BatchNorm1d
+  n_layer: 4 # override 3 >> 4
+
+SAGE_Arxiv_tuned: &SAGE_Arxiv_tuned
+  <<: [*SAGE_Arxiv_exist]
+  learning_rate: 0.001 # override 0.01 >> 0.001
+  n_layer: 5 # override 3 >> 5
+
+  
+# -------model instance (our study)-------
+
+# Summarize Skip Connection
+SummarizeSkip: &SummarizeSkip
+  skip_connection: summarize
+  summary_mode: vanilla # [vanilla, roll, lstm]
+  att_mode: mx # [ad, dp, mx]
+
+
+SummarizeGCN_Cora: &SummarizeGCN_Cora
+  <<: [*SummarizeSkip, *GCN_Cora_tuned]
+
+SummarizeGCN_CiteSeer: &SummarizeGCN_CiteSeer
+  <<: [*SummarizeSkip, *GCN_CiteSeer_tuned]
+
+SummarizeGCN_PubMed: &SummarizeGCN_PubMed
+  <<: [*SummarizeSkip, *GCN_PubMed_tuned]
+
+SummarizeGCN_PPIinduct: &SummarizeGCN_PPIinduct
+  <<: [*SummarizeSkip, *GCN_PPIinduct_exist]
+
+SummarizeGCN_PPI: &SummarizeGCN_PPI
+  <<: [*SummarizeSkip, *GCN_PPI_tuned]
+
+SummarizeGCN_Arxiv: &SummarizeGCN_Arxiv
+  <<: [*SummarizeSkip, *GCN_Arxiv_tuned]
+
+
+SummarizeGAT_Cora: &SummarizeGAT_Cora
+  <<: [*SummarizeSkip, *GAT_Cora_tuned]
+
+SummarizeGAT_CiteSeer: &SummarizeGAT_CiteSeer
+  <<: [*SummarizeSkip, *GAT_CiteSeer_tuned]
+
+SummarizeGAT_PubMed: &SummarizeGAT_PubMed
+  <<: [*SummarizeSkip, *GAT_PubMed_tuned]
+
+SummarizeGAT_PPIinduct: &SummarizeGAT_PPIinduct
+  <<: [*SummarizeSkip, *GAT_PPIinduct_tuned]
+
+
+SummarizeSAGE_PPIinduct: &SummarizeSAGE_PPIinduct
+  <<: [*SummarizeSkip, *SAGE_PPIinduct_exist]
+  n_hid: 128 # override >> SAGE_PPIinduct
+  learning_rate: 0.001 # override >> SAGE_PPIinduct
+
+SummarizeSAGE_Reddit_exist: &SummarizeSAGE_Reddit_exist
+  <<: [*SummarizeSkip, *SAGE_Reddit_exist]
+  summary_mode: lstm
+  att_mode: ad
+
+SummarizeSAGE_Reddit_tuned: &SummarizeSAGE_Reddit_tuned
+  <<: [*SummarizeSkip, *SAGE_Reddit_tuned]
+
+SummarizeSAGE_PPI: &SummarizeSAGE_PPI
+  <<: [*SummarizeSkip, *SAGE_PPI_tuned]
+
+SummarizeSAGE_Arxiv: &SummarizeSAGE_Arxiv
+  <<: [*SummarizeSkip, *SAGE_Arxiv_tuned]
+
