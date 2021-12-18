@@ -1,5 +1,5 @@
 # skipconnections-inGNNs
-python scripts for my academic research#1
+python scripts for my academic research#2
 
 ## Requirements
 ```bash
